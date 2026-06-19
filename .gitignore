@@ -1,0 +1,56 @@
+# ───────────────────────── Dados (regeneráveis, pesados) ─────────────────────
+# 3.5 GB de rasters/labels — ver data/README.md para regenerar com os scripts.
+# Ignora o conteúdo de data/, mas mantém o README que documenta como regenerar.
+/data/*
+!/data/README.md
+*.npy
+*.pt
+*.bil
+*.tif
+*.tiff
+
+# Backups de desenvolvimento (dados corrompidos antigos, não publicar)
+*_OLD_colormap_bug/
+
+# ───────────────────────── Simulador externo ────────────────────────────────
+# ELMFIRE é um projeto externo (clonar à parte) — não versionar aqui.
+/elmfire/
+
+# ───────────────────────── Modelos treinados e saídas grandes ───────────────
+/results/models/
+/results/models_OLD_colormap_bug/
+/results/visualizations/
+
+# ───────────────────────── Snapshots de entrega (legado) ────────────────────
+# Estrutura antiga por "entrega" — não faz sentido no repositório publicado.
+/entrega_1/
+/entrega_2/
+ENTREGA2_STATUS.md
+
+# ───────────────────────── Logs ─────────────────────────────────────────────
+*.log
+
+# ───────────────────────── Artefatos de build C/CUDA ────────────────────────
+*.o
+*.obj
+*.out
+simulator/simulator
+simulator/openmp/simulator_omp
+simulator/cuda/fire_cuda
+kdtree/kdtree_demo
+
+# ───────────────────────── Python ───────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# ───────────────────────── Material de referência / rascunhos ───────────────
+seilá.txt
+slides_trabalho_final.pptx.pptx
+
+# ───────────────────────── Sistema / IDE ────────────────────────────────────
+.DS_Store
+.vscode/
+.claude/

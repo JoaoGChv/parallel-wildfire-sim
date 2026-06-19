@@ -1,0 +1,324 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{xurl}
+
+\sloppy
+
+\title{Aceleração de Simulação de Incêndios Florestais por Balanceamento de
+  Carga Guiado por Aprendizado:\\ Reprodução, Otimização e Análise Crítica}
+
+\author{João Guilherme da Silva Chaveiro\inst{1}, Frederico Barbosa Relvas\inst{1},\\
+    Rian de Souza Santos\inst{1}, Davi de Souza Andrade\inst{1}, Ricardo Augusto Pereira Franco\inst{1}}
+
+\address{Instituto de Informática -- Universidade Federal de Goiás (UFG)\\
+    Goiânia -- GO -- Brasil
+    \email{joao\_guilherme23@discente.ufg.br; relvas@discente.ufg.br;}\\
+    \footnotesize\texttt{rian.souza@discente.ufg.br; davisouza@discente.ufg.br;}\\
+    \footnotesize\texttt{ricardofranco@ufg.br}
+  }
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  This paper reproduces and critically analyzes the distributed-computing
+  framework of Kwon, Yun \& Kim (Sensors, 2022), which uses a CNN to predict the
+  computational load of a wildfire simulation and a k-d tree to partition it in a
+  balanced way across nodes. We built the full pipeline (LANDFIRE semantic data,
+  ELMFIRE labels, a C Rothermel simulator with OpenMP and CUDA versions, and the
+  k-d tree partitioner) and evaluated it with the paper's relative-simulation-time
+  metric. Our main results: (i) we found and fixed a serious data-acquisition
+  corruption; (ii) we optimized the parallel versions (CUDA 11$\times$, OpenMP
+  7$\times$); and (iii) we report an honest central finding -- predicting load
+  \emph{statically} from semantic data does not work for wildfires (spread is
+  global and anisotropic), even though the method's ceiling is high (a real-load
+  oracle is 35--57\% better than uniform partitioning). We characterize, via an
+  online rebalancing model, \emph{when} load balancing pays off, and we extend the
+  pipeline to Brazil.
+\end{abstract}
+
+\begin{resumo}
+  Este artigo reproduz e analisa criticamente o \textit{framework} de computação
+  distribuída de Kwon, Yun \& Kim (\textit{Sensors}, 2022), que usa uma CNN para
+  prever a carga computacional de uma simulação de incêndio e uma \textit{k-d
+  tree} para particioná-la de forma balanceada entre nós. Construímos o
+  \textit{pipeline} completo (dados semânticos do LANDFIRE, rótulos via ELMFIRE,
+  um simulador de Rothermel em C com versões OpenMP e CUDA, e o particionador
+  \textit{k-d tree}) e o avaliamos com a métrica de \textit{tempo de simulação
+  relativo} do artigo. Resultados principais: (i) encontramos e corrigimos uma
+  corrupção séria na aquisição dos dados; (ii) otimizamos as versões paralelas
+  (CUDA 11$\times$, OpenMP 7$\times$); e (iii) reportamos um achado central honesto
+  --- prever a carga \emph{estaticamente} a partir do dado semântico não funciona
+  para incêndios (a propagação é global e anisotrópica), embora o teto do método
+  seja alto (um oráculo de carga real é 35--57\% melhor que o particionamento
+  uniforme). Delimitamos, por um modelo de rebalanceamento \textit{online},
+  \emph{quando} o balanceamento de carga compensa, e estendemos o
+  \textit{pipeline} ao Brasil.
+\end{resumo}
+
+\section{Introdução}
+
+Simulações de desastres naturais de larga escala, como incêndios florestais, são
+computacionalmente caras e exigem computação distribuída para fornecer respostas
+em tempo útil~\cite{kwon:22}. Nesse cenário, o principal fator de atraso é o
+\textbf{desbalanceamento de carga} entre os nós: a cada passo de simulação existe
+uma barreira de sincronização, e todos os nós aguardam o mais lento. Logo,
+distribuir a carga de forma equilibrada é determinante para o desempenho.
+
+O trabalho de referência~\cite{kwon:22} propõe um \textit{framework} que (i) prevê
+a carga computacional por célula com uma rede neural convolucional (CNN) a partir
+de dados semânticos do desastre e (ii) particiona o domínio com uma \textit{k-d
+tree} de modo que cada partição contenha carga equivalente. Os autores reportam
+até 38,5\% de redução no tempo de predição. A avaliação original, porém, é
+conduzida sobre incêndios dos Estados Unidos e assume que a predição de carga é
+acurada.
+
+Este artigo reproduz o \textit{framework}, melhora-o onde possível e o avalia com
+rigor, reportando honestamente onde a abordagem funciona e onde não. Nossas
+contribuições são: a correção e validação de uma corrupção na aquisição de dados;
+a otimização das versões paralelas (OpenMP e CUDA); a caracterização empírica de
+que a predição estática de carga é insuficiente para incêndios; a delimitação de
+quando o balanceamento compensa, via um modelo de rebalanceamento \textit{online};
+e a generalização do \textit{pipeline} para cenários do Brasil.
+
+\section{Formulação do Problema}
+
+Seja um domínio em grade $G$ de $R \times C$ células ($450 \times 450$, $30$~m por
+célula) a ser simulado por $N$ nós de computação. A simulação avança em passos
+discretos; ao final de cada passo há uma sincronização. Denote por
+$\mathrm{CL}(p)$ a carga computacional (tempo de simulação) da partição $p$. O
+tempo de um passo é ditado pelo nó mais lento, $\max_p \mathrm{CL}(p)$.
+
+O \textit{tempo de simulação relativo} de um esquema de particionamento, em relação
+à execução em um único nó (\textit{standalone}), é (Eq.~5 de~\cite{kwon:22}):
+\begin{equation}
+  T^{\text{esquema}} = \frac{1}{f}\sum_{k=1}^{f}
+  \frac{\max_p \mathrm{CL}^{\text{esquema}}_k(p)}{\mathrm{CL}^{\text{standalone}}_k},
+  \label{eq:reltime}
+\end{equation}
+em que $f$ é o número de cenários. Menor é melhor; com $N$ partições perfeitamente
+balanceadas, $T \to 1/N$. O problema é, então, \emph{estimar a carga por região e
+particionar de modo a minimizar $\max_p \mathrm{CL}(p)$}.
+
+O monitoramento de desbalanceamento durante a simulação segue o limiar de 10\%
+(Eqs.~2--4 de~\cite{kwon:22}): com $T = \mathrm{CL}_{\max}-\mathrm{CL}_{\min}$ e
+$T^{\text{lim}} = 0{,}1\cdot\overline{\mathrm{CL}}$, reparticiona-se quando
+$T \ge T^{\text{lim}}$.
+
+\section{Objetivos}
+
+\noindent\textbf{Objetivo geral.} Reproduzir, otimizar e avaliar criticamente o
+\textit{framework} de balanceamento de carga guiado por CNN de~\cite{kwon:22}
+aplicado à simulação de incêndios florestais.
+
+\noindent\textbf{Objetivos específicos:}
+\begin{itemize}
+  \item construir o \textit{pipeline} completo (dados, rótulos, CNN, simulador,
+    particionador) e validar a integridade dos dados;
+  \item implementar e \textbf{otimizar} versões paralelas do simulador em OpenMP e
+    CUDA, fornecendo as métricas de aceleração (\textit{baseline} sequencial vs.\
+    propostas);
+  \item avaliar o particionamento pela métrica do artigo (Eq.~\ref{eq:reltime}) e
+    contra um oráculo de carga real;
+  \item analisar criticamente a viabilidade da predição de carga e delimitar
+    quando o rebalanceamento compensa.
+\end{itemize}
+
+\section{Metodologia}
+
+\subsection{Pipeline e dados}
+
+Cada cenário é representado por \textbf{14 camadas semânticas} ($450\times450$):
+topografia e combustível do LANDFIRE~\cite{landfire} (elevação, \textit{aspect},
+\textit{slope}, modelo de combustível, copa) e clima como constantes aleatórias,
+como no artigo. Usamos 68 cenários reais de incêndios nos EUA em 2016 (51 treino +
+17 teste). Os \textbf{rótulos} de carga (tempo de chegada do fogo, \textit{TOA})
+foram gerados pelo simulador ELMFIRE (Rothermel~\cite{rothermel:72} + frente de
+onda à la FARSITE~\cite{finney:98}).
+
+\subsection{Correção da fundação de dados}
+
+A análise exploratória revelou que o serviço de imagens do LANDFIRE estava
+devolvendo a \emph{renderização colorida} (\textit{colormap}) em vez do raster
+bruto, destruindo os códigos categóricos de combustível (que viravam uma rampa
+contínua). Corrigimos três defeitos: (i) requisição do raster bruto via
+\texttt{renderingRule}; (ii) troca de FBFM40 para FBFM13 (Anderson,
+\cite{anderson:82}), compatível com o simulador; e (iii) tratamento de
+\textit{nodata} ($-9999$). Após a correção, revalidamos: \textbf{zero anomalias}
+nas 14 camadas (Figura~\ref{fig:camadas}).
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{fig_camadas.png}
+  \caption{As 14 camadas semânticas de um cenário após a correção (topografia e
+  combustível em valores físicos; clima constante por cenário).}
+  \label{fig:camadas}
+\end{figure}
+
+\subsection{Simulador e versões paralelas}
+
+Implementamos um simulador próprio em C (modelo de Rothermel~\cite{rothermel:72} +
+Dijkstra/frente de onda) com três versões: \textbf{sequencial} (\textit{baseline}),
+\textbf{OpenMP} (decomposição de domínio em faixas + \textit{halo exchange}) e
+\textbf{CUDA} (relaxação paralela em \textit{shared memory}). O particionador
+\textbf{k-d tree} divide o grid recursivamente balanceando a carga acumulada.
+
+\subsection{Predição de carga e avaliação}
+
+A CNN~\cite{kwon:22} recebe janelas atômicas $21\times21$ e prevê a carga por
+célula. O particionamento é avaliado pela Eq.~\ref{eq:reltime}, comparando quatro
+esquemas: \textit{uniform-sized} (área igual), \textit{points-based} (densidade de
+células queimáveis), \textbf{proposta} (carga prevista pela CNN) e \textbf{oráculo}
+(carga real, teto de desempenho).
+
+\section{Resultados}
+
+\subsection{Otimização paralela}
+
+A Tabela~\ref{tab:par} mostra os ganhos. No CUDA, a chave foi a relaxação iterativa
+interna em \textit{shared memory} (de 416 para 37 lançamentos de \textit{kernel}) e
+a correção de um sentinela de infinito; no OpenMP, a remoção de um
+\texttt{\#pragma omp critical} global, substituído por escrita \textit{lock-free}
+por linhas. Os três simuladores concordam em $\sim$93,3\% de área queimada,
+validando a corretude.
+
+\begin{table}[ht]
+\centering
+\caption{Otimização das versões paralelas (cenário S002, mesmo \textit{hardware}).}
+\label{tab:par}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Versão} & \textbf{Antes} & \textbf{Depois} & \textbf{Ganho} \\
+\midrule
+CUDA   & 3,17 s (416 \textit{launches}) & \textbf{0,28 s} (37) & \textbf{11$\times$} \\
+OpenMP & 1,15 s & \textbf{0,157 s} (8 \textit{threads}) & \textbf{7$\times$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Métrica do artigo e o oráculo}
+
+A Figura~\ref{fig:metrica} e a Tabela~\ref{tab:metrica} mostram o tempo de
+simulação relativo (Eq.~\ref{eq:reltime}). O \textbf{oráculo} é 35--57\% melhor que
+o uniforme: \emph{o método tem teto altíssimo}. Porém a \textbf{proposta com CNN
+estática fica pior que o uniforme} --- a predição estática não captura onde o fogo
+realmente vai.
+
+\begin{table}[ht]
+\centering
+\caption{Tempo de simulação relativo por nº de partições (17 cenários de teste).
+Menor é melhor.}
+\label{tab:metrica}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Partições} & \textbf{Uniform} & \textbf{Points} & \textbf{Proposta (CNN)} & \textbf{Oráculo} \\
+\midrule
+2  & 0,855 & 0,852 & 0,917 & \textbf{0,545} \\
+4  & 0,659 & 0,706 & 0,771 & \textbf{0,281} \\
+8  & 0,566 & 0,601 & 0,667 & \textbf{0,165} \\
+16 & 0,512 & 0,540 & 0,605 & \textbf{0,103} \\
+32 & 0,422 & 0,447 & 0,504 & \textbf{0,070} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.8\linewidth]{fig_metrica.png}
+  \caption{Tempo de simulação relativo por estratégia. O oráculo (carga real) é o
+  teto; a CNN estática fica acima (pior que) o uniforme.}
+  \label{fig:metrica}
+\end{figure}
+
+\subsection{Por que a predição estática falha}
+
+Treinamos a CNN como regressão do TOA e como classificação queima/não (\textit{recall}
+0,08, \textit{overfit}); ambas falham como mapa de carga. Mesmo um proxy de
+distância à ignição correlaciona apenas 0,21 com a área queimada. A causa é que
+\emph{quais células queimam depende do caminho global do fogo} (vento,
+conectividade do combustível, barreiras), invisível a uma janela local estática.
+Verificamos que a \textit{k-d tree} está correta (atinge o balanço ideal em carga
+sintética), isolando o problema na predição.
+
+\subsection{Rebalanceamento online}
+
+Como a carga é conhecida \emph{durante} a simulação (a frente de fogo atual),
+modelamos um rebalanceamento \textit{online} dirigido pelo campo TOA real
+(Figura~\ref{fig:online}). O \textbf{reativo} (mecanismo do artigo) recupera quase
+todo o ganho do oráculo em qualidade de balanço, usando $\sim\!\!\frac{1}{4}$ dos
+reparticionamentos do oráculo. Ao incluir o custo de migração de estado entre nós,
+porém, no nosso regime (fogos curtos e espalhados) o custo supera o ganho. A
+variante preditiva não superou a reativa de forma robusta. \emph{Delimitamos}
+assim quando o balanceamento paga: simulações grandes, longas e concentradas.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.85\linewidth]{fig_online.png}
+  \caption{Rebalanceamento \textit{online} (N=8): tempo relativo e nº de
+  reparticionamentos por estratégia.}
+  \label{fig:online}
+\end{figure}
+
+\subsection{Análises complementares}
+
+\paragraph{Sensibilidade a clima/vento (Figura~\ref{fig:sens}).} Sem vento o fogo
+quase não se propaga; acima de $\sim$0,15--0,18 de umidade ele se extingue; o vento
+empurra a frente vários km a favor --- confirmando que o modelo de Rothermel
+responde fisicamente.
+
+\paragraph{Generalização ao Brasil (Figura~\ref{fig:brasil}).} Geramos cenários
+para Pantanal, Cerrado e Amazônia a partir de fontes globais (Esri Terrain3D +
+Sentinel-2 \textit{Land Cover} mapeado para FBFM13), com a simulação propagando
+fogo em terreno brasileiro.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{fig_sensibilidade.png}
+  \caption{Sensibilidade da propagação a vento e umidade (simulação real).}
+  \label{fig:sens}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{fig_brasil.png}
+  \caption{\textit{Pipeline} aplicado ao Brasil: combustível (topo) e propagação
+  real do fogo (base) em quatro biomas.}
+  \label{fig:brasil}
+\end{figure}
+
+\section{Conclusão}
+
+Reproduzimos e analisamos criticamente o \textit{framework} de balanceamento de
+carga guiado por CNN de~\cite{kwon:22}. O balanceamento por carga \textbf{funciona}
+quando a carga é conhecida (oráculo 35--57\% melhor que o uniforme), mas
+\textbf{prever a carga estaticamente não funciona} para incêndios --- um resultado
+negativo bem caracterizado, que motiva o rebalanceamento \textit{online}. O ganho
+líquido deste depende do \textit{trade-off} entre o custo de migração e a duração
+da simulação. Em relação ao artigo original, nossas melhorias foram: o
+\textit{pipeline} de dados corrigido e validado, ganhos de paralelização (CUDA
+11$\times$, OpenMP 7$\times$), a generalização ao Brasil e a delimitação empírica
+honesta de quando o método compensa.
+
+Como trabalhos futuros: avaliar em um regime maior/mais longo para evidenciar o
+ganho líquido do rebalanceamento; um preditor de carga com contexto global
+(trajetória da frente); e dados de combustível brasileiros mais fiéis (MapBiomas) e
+perímetros reais de ignição (INPE/Programa Queimadas).
+
+\section*{Disponibilidade de código}
+
+Todo o código (pré-processamento, simuladores, particionador, avaliação e
+simulador interativo) está disponível no repositório do projeto.
+
+\bibliographystyle{sbc}
+\bibliography{referencias}
+
+\end{document}

@@ -1,0 +1,15 @@
+# Pipeline de dados e geo
+numpy
+requests
+rasterio
+pyproj
+
+# CNN / treino
+torch
+
+# Avaliação e análise
+scipy
+matplotlib
+
+# Simulador interativo
+streamlit

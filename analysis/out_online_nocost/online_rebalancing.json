@@ -1,0 +1,21 @@
+{
+  "n_parts": 8,
+  "summary": {
+    "static": {
+      "reltime": 0.16821398355649042,
+      "reparts": 0.0
+    },
+    "reactive": {
+      "reltime": 0.15139741263044376,
+      "reparts": 9.411764705882353
+    },
+    "predictive": {
+      "reltime": 0.1640719114520797,
+      "reparts": 9.411764705882353
+    },
+    "oracle": {
+      "reltime": 0.14445872921916914,
+      "reparts": 37.11764705882353
+    }
+  }
+}
