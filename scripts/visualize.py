@@ -1,16 +1,3 @@
-"""
-visualize.py — Gera visualizações dos dados e resultados da Entrega 1
-
-Gera (em results/visualizations/):
-  1. semantic_{sid}.png    — as 14 camadas semânticas de um cenário
-  2. elmfire_toa_{sid}.png — mapa de time-of-arrival gerado pelo elmfire
-  3. simulator_toa_{sid}.png — propagação do simulador C (Rothermel+Dijkstra)
-  4. sweep_mse.png         — gráfico do sweep de atomic sizes
-
-Uso:
-    python visualize.py --scenario S001 --all-layers
-    python visualize.py --scenario S001 --sweep
-"""
 import argparse
 import csv
 import subprocess

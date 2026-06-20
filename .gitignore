@@ -54,3 +54,7 @@ slides_trabalho_final.pptx.pptx
 .DS_Store
 .vscode/
 .claude/
+
+# Pacote de modelos p/ Hugging Face (local)
+/modelos_huggingface/
+modelos_huggingface.tar.gz

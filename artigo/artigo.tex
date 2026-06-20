@@ -180,6 +180,44 @@ esquemas: \textit{uniform-sized} (área igual), \textit{points-based} (densidade
 células queimáveis), \textbf{proposta} (carga prevista pela CNN) e \textbf{oráculo}
 (carga real, teto de desempenho).
 
+\subsection{Métricas de avaliação}
+\label{sec:metricas}
+
+A avaliação usa quatro métricas, resumidas na Tabela~\ref{tab:metricas}:
+
+\begin{itemize}
+  \item \textbf{Tempo de simulação relativo} ($T$, Eq.~\ref{eq:reltime}): mede a
+    qualidade do balanceamento de um esquema de particionamento como
+    $\max_p \mathrm{CL}(p)/\mathrm{CL}^{\text{standalone}}$, médio sobre os
+    cenários. \emph{Menor é melhor} (mais balanceado); o limite ideal é $1/N$.
+  \item \textbf{Speedup} das versões paralelas: razão entre o tempo de execução
+    \emph{antes} e \emph{depois} da otimização, e de cada versão (OpenMP, CUDA)
+    em relação ao \textit{baseline} sequencial. \emph{Maior é melhor.}
+  \item \textbf{Corretude}: fração de área queimada concordante entre as versões
+    sequencial, OpenMP e CUDA, usada para garantir que a paralelização preserva o
+    resultado físico da simulação.
+  \item \textbf{Gap de predição de carga}: distância, na métrica $T$, entre o
+    esquema \textbf{proposta} (carga prevista pela CNN) e o \textbf{oráculo} (carga
+    real). Quantifica o quanto a imprecisão da predição afasta o método do seu
+    teto de desempenho.
+\end{itemize}
+
+\begin{table}[ht]
+\centering
+\caption{Métricas de avaliação empregadas.}
+\label{tab:metricas}
+\begin{tabular}{lll}
+\toprule
+\textbf{Métrica} & \textbf{Definição} & \textbf{Interpretação} \\
+\midrule
+$T$ (relativo)        & $\max_p \mathrm{CL}(p)/\mathrm{CL}^{\text{stand.}}$ & menor = mais balanceado \\
+Speedup               & tempo antes / depois (e vs.\ seq.)                 & maior = mais rápido \\
+Área queimada (\%)    & concordância entre as versões                      & valida a corretude \\
+Gap oráculo--proposta & $T_{\text{proposta}} - T_{\text{oráculo}}$         & erro da predição de carga \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Resultados}
 
 \subsection{Otimização paralela}

@@ -1,38 +1,3 @@
-"""
-preprocess.py — Pipeline de preprocessing: gera arrays semânticos 450×450×14 por cenário
-
-Estratégia: para cada cenário, consulta diretamente os ImageServers do LANDFIRE
-e baixa apenas o tile 450×450 necessário (13.5km × 13.5km). Não precisa baixar
-o CONUS inteiro.
-
-Os valores são armazenados BRUTOS (unidades físicas), não normalizados:
-elevação em m, slope em %, aspect em graus, fbfm13 em código (1–13 + 91–99
-não-queimável), clima em unidade nativa. A normalização por canal para a CNN
-é feita em dataset.py. O simulador C consome os valores brutos diretamente.
-
-14 camadas (Kwon et al. 2022):
-  Landscape (8) — LANDFIRE ImageServers (valores brutos via renderingRule None):
-    0: elevation   → Landfire_Topo/LF2020_Elev_CONUS      (m)
-    1: aspect      → Landfire_Topo/LF2020_Asp_CONUS        (graus 0–360)
-    2: slope       → Landfire_Topo/LF2020_SlpP_CONUS       (percent)
-    3: fbfm13      → Landfire_LF2016/LF2016_FBFM13_CONUS   (código Anderson 1–13; 91–99 não-queimável)
-    4: cc          → Landfire_LF2016/LF2016_CC_CONUS       (%)
-    5: ch          → Landfire_LF2016/LF2016_CH_CONUS
-    6: cbh         → Landfire_LF2016/LF2016_CBH_CONUS
-    7: cbd         → Landfire_LF2016/LF2016_CBD_CONUS
-  Weather (6) — constantes aleatórias por cenário (per paper), unidades nativas:
-    8:  temperature  (50–120 °F)
-    9:  humidity     (5–95 %)
-    10: cloud_cover  (0–100 %)
-    11: precipitation(0–0.5 in/h)
-    12: wind_direction(0–360°)
-    13: wind_speed   (0–30 mph)
-
-Uso:
-    python preprocess.py --scenarios ../scenarios.csv --output-dir ../data/semantic
-    python preprocess.py --scenarios ../scenarios.csv --output-dir ../data/semantic --workers 4
-    python preprocess.py --scenarios ../scenarios.csv --output-dir ../data/semantic --scenario-id S001
-"""
 import argparse
 import csv
 import io

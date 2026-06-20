@@ -1,16 +1,3 @@
-"""
-download_landfire.py — Baixa as 8 camadas landscape LANDFIRE 2016 via ImageServer
-
-Usa o ArcGIS ImageServer (exportImage) em vez do GPServer,
-que mudou de endpoint. Muito mais rápido — download por tile.
-
-Camadas (Kwon et al. 2022):
-  elevation, aspect, slope, fbfm40, cc, ch, cbh, cbd
-
-Uso:
-    python download_landfire.py --scenarios ../scenarios.csv --output ../data/landfire
-    python download_landfire.py --bbox "-122,37,-110,42" --output ../data/landfire
-"""
 import argparse
 import csv
 import time

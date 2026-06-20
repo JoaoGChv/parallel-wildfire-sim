@@ -1,23 +1,3 @@
-"""
-run_elmfire_batch.py — Executa elmfire para cada cenário e gera labels (time_of_arrival)
-
-Fluxo por cenário:
-  1. Determina UTM zone do ponto de ignição
-  2. Baixa GeoTIFFs crus (valores físicos) do LANDFIRE ImageServer em UTM
-  3. Gera rasters de clima com valores constantes aleatórios (per paper)
-  4. Monta elmfire.data com os paths e parâmetros corretos
-  5. Executa elmfire via mpirun
-  6. Extrai time_of_arrival (label) do output
-  7. Salva par (X=semantic_npy, y=toa) como .pt
-
-Uso:
-    python run_elmfire_batch.py \
-        --scenarios ../scenarios.csv \
-        --semantic-dir ../data/semantic \
-        --output-dir ../data/labels \
-        --elmfire-bin ../elmfire/repo/build/linux/bin/elmfire \
-        --workers 4
-"""
 import argparse
 import csv
 import io

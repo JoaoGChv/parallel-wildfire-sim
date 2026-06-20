@@ -1,24 +1,3 @@
-"""
-select_scenarios.py — Seleciona os cenários de incêndio 2016 conforme o paper
-
-Fonte: Kwon et al. (2022), Sensors 22(18), 6749.
-
-Critérios (extraídos diretamente do paper):
-  - Pool total: 341 incêndios large-scale de 2016 (>300 acres = classe E ou maior)
-  - Test set: 17 incêndios classe F (1.000–4.999,9 acres)
-  - Train set: 51 incêndios aleatórios do pool restante (>300 acres, excluindo os 17 de teste)
-  - Localização: EUA continentais (CONUS)
-
-NWCG fire size classes:
-  E: 300–999.9 acres
-  F: 1.000–4.999.9 acres  ← test set
-  G: 5.000+ acres
-
-Uso:
-    python select_scenarios.py \
-        --perimeters ../data/nifc/perimeters_2016/nifc_perimeters_2016.geojson \
-        --output ../scenarios.csv
-"""
 import argparse
 import json
 import random

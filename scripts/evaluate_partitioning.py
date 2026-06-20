@@ -1,24 +1,3 @@
-"""
-evaluate_partitioning.py — Métrica do paper (Fig.12): tempo de simulação relativo
-por estratégia de particionamento.
-
-Compara 3 estratégias de balanceamento (Kwon et al. 2022), todas via k-d tree
-(mesmo algoritmo de kdtree/kdtree.c), variando apenas o MAPA DE CARGA
-que decide os cortes:
-
-  - uniform-sized : carga uniforme (tudo 1) → partições de área igual
-  - points-based  : carga = 1 se célula queimável, 0 senão → partição por nº de
-                    pontos de computação
-  - proposta (CNN): carga = TOA predito pela CNN (LoadPredictorCNN)
-
-Para cada estratégia, mede o TEMPO RELATIVO usando a carga REAL (ground-truth =
-TOA do elmfire): relative = max(carga_real_partição) / carga_real_total
-(Eq.5 do paper). Menor = melhor balanceamento. A proposta deve ficar abaixo das
-demais, reproduzindo a Figura 12.
-
-Uso:
-    python scripts/evaluate_partitioning.py --split test --out analysis/out
-"""
 import argparse
 import csv as _csv
 import sys

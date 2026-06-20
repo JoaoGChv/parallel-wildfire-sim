@@ -1,25 +1,3 @@
-"""
-run_benchmark.py - Benchmark completo: Sequencial vs. OpenMP vs. CUDA
-
-Para cada cenario em scenarios.csv:
-  1. Converte .npy para CSV
-  2. Roda simulator (sequencial, Entrega 1)
-  3. Roda simulator_omp (threads 1,2,4,8,16)
-  4. Roda fire_cuda
-
-Salva resultados em results/benchmark_results.csv e gera speedup_chart.png
-
-Uso:
-    python run_benchmark.py --scenarios ../../scenarios.csv
-                            --semantic-dir ../../data/semantic
-                            --seq   ../simulator/simulator
-                            --omp   ../openmp/simulator_omp
-                            --cuda  ../cuda/fire_cuda
-                            --runs 3 --n-scenarios 10
-
-    rodar para TODOS os 68 cenarios:
-    python run_benchmark.py ... --all-scenarios
-"""
 import argparse
 import csv
 import json

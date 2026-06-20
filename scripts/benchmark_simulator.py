@@ -1,14 +1,3 @@
-"""
-benchmark_simulator.py — Mede tempo de execução do simulador C sequencial
-para todos os 68 cenários. Salva resultados em results/sequential_times.csv.
-
-Uso:
-    python benchmark_simulator.py \
-        --scenarios ../scenarios.csv \
-        --semantic-dir ../data/semantic \
-        --simulator ../simulator/simulator \
-        --output ../results/sequential_times.csv
-"""
 import argparse
 import csv
 import subprocess

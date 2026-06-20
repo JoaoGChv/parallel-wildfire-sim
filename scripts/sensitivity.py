@@ -1,20 +1,3 @@
-"""
-sensitivity.py — Análise de sensibilidade da propagação a clima/vento (extra G)
-
-Varre, com a SIMULAÇÃO REAL (simulator C), os parâmetros meteorológicos e mede como
-a propagação responde:
-  - velocidade do vento  → taxa de espalhamento (área alcançada em tempo fixo)
-  - umidade do combustível → idem (mais seco = espalha mais)
-  - direção do vento      → anisotropia (alongamento da frente a favor do vento)
-
-Gera:
-  analysis/out/sensitivity_wind_moisture.png   — linhas + heatmap (área@T)
-  analysis/out/sensitivity_anisotropy.png       — alongamento vs vento
-  analysis/out/sensitivity.json                 — tabela de valores
-
-Uso:
-    python scripts/sensitivity.py --scenario S002 --split train
-"""
 import argparse
 import json
 import subprocess

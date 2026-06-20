@@ -1,12 +1,3 @@
-"""
-download_nifc.py — Baixa perímetros de incêndios 2016 do NIFC Open Data
-
-Fonte: ArcGIS FeatureService público (sem autenticação)
-URL: data-nifc.opendata.arcgis.com
-
-Uso:
-    python download_nifc.py --output ../data/nifc/perimeters_2016
-"""
 import argparse
 import json
 import time

@@ -1,17 +1,3 @@
-"""
-fbfm40_crosswalk.py — Crosswalk FBFM40 (Scott & Burgan, 40 modelos) → FBFM13
-(Anderson, 13 modelos), que é o que o simulador (rothermel.c) implementa.
-
-O FBFM40 (LANDFIRE LF2016_FBFM40) é mais detalhado (códigos 101–204 por grupo:
-GR grama, GS grama-arbusto, SH arbusto, TU timber-understory, TL timber-litter,
-SB slash) mas o nosso simulador tem os 13 modelos clássicos de Anderson. Esta
-tabela traduz cada modelo de Scott & Burgan para o Anderson mais próximo em
-comportamento de fogo, permitindo consumir dados FBFM40 sem reescrever a física.
-
-Não-queimáveis (91–99) são preservados. Referência: aproximação baseada no
-comportamento (taxa de espalhamento/carga) dos grupos S&B.
-"""
-
 # FBFM40 → Anderson 13 (1..13) ou não-queimável (91..99)
 FBFM40_TO_ANDERSON = {
     # Não-queimáveis

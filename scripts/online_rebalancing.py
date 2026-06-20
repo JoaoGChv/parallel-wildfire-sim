@@ -1,33 +1,3 @@
-"""
-online_rebalancing.py — Entrega 3: rebalanceamento de carga ONLINE durante a simulação
-
-Contribuição do trabalho. Diagnosticamos que prever a carga ESTATICAMENTE (do dado
-semântico) não funciona — a propagação é global/anisotrópica (ver
-evaluate_partitioning.py: proposta estática < uniform; oráculo >> todos). A carga,
-porém, é conhecida DURANTE a simulação (a frente de fogo atual). Então balanceamos
-online.
-
-Modelo (dirigido pelo campo TOA real dos labels elmfire):
-  - O tempo é discretizado em N_STEPS. No passo k, as células ATIVAS (trabalho
-    computacional) são a frente do fogo: TOA ∈ [t_k, t_{k+1}).
-  - Com a partição corrente P (N nós), o tempo do passo = max_p (#ativas na partição p)
-    — o nó mais lento dita o passo. Tempo total (makespan) = Σ_k max_p load_{k,p}.
-
-Estratégias:
-  - static    : particiona 1× por área (uniform) em t=0 e nunca reparticiona.
-  - reactive  : reparticiona quando o desbalanceamento medido passa do limiar de 10%
-                (Eqs 2-4 do paper), usando a frente ATUAL. (baseline do paper)
-  - predictive: NOSSA contribuição — reparticiona usando a frente PREVISTA dos próximos
-                W passos (dilatação local da frente ∩ combustível, ponderada por ROS).
-                Como antecipa o movimento, a partição vale por mais passos → MENOS
-                reparticionamentos para o mesmo (ou melhor) balanço.
-  - oracle    : reparticiona TODO passo na carga real (teto de balanço, nº máx. de reparts).
-
-Métricas: tempo total relativo (vs 1 nó) e nº de reparticionamentos por estratégia.
-
-Uso:
-    python scripts/online_rebalancing.py --split test --n-parts 8 --out analysis/out
-"""
 import argparse
 import csv as _csv
 import json

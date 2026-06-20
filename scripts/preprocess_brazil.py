@@ -1,19 +1,3 @@
-"""
-preprocess_brazil.py — Gera cenários semânticos 450×450×14 para locais do BRASIL
-(extra C). LANDFIRE é só EUA, então usamos fontes GLOBAIS acessíveis:
-
-  - Elevação: Esri WorldElevation3D/Terrain3D ImageServer (metros) → dela derivamos
-    SLOPE (%) e ASPECT (graus) pelo gradiente (30 m/célula).
-  - Uso do solo: Esri Sentinel-2 10m Land Cover ImageServer → mapeado para o modelo
-    de combustível FBFM13 (Anderson) e para a copa (cc/ch/cbh/cbd aproximadas).
-  - Clima: constantes aleatórias por cenário (unidades nativas), como no paper.
-
-Saída compatível com o simulador (mesma ordem de camadas do preprocess.py dos EUA):
-0=elev 1=aspect 2=slope 3=fbfm13 4=cc 5=ch 6=cbh 7=cbd 8-13=clima.
-
-Uso:
-    python scripts/preprocess_brazil.py --out-dir data/semantic_brazil
-"""
 import argparse
 import io
 import random
