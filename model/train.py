@@ -1,11 +1,3 @@
-"""
-train.py — Treina LoadPredictorCNN e registra MSE por atomic_size
-
-Uso:
-    python train.py --scenarios ../scenarios.csv --labels-dir ../data/labels \
-                    --results-dir ../results --atomic-size 21 --epochs 50
-    python train.py ... --sweep-sizes   # treina todos os 5 sizes e compara
-"""
 import argparse
 import json
 import logging

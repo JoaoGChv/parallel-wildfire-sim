@@ -1,11 +1,4 @@
 """
-fire_dashboard.py — Simulador interativo de incêndio (Streamlit)
-
-Dashboard que roda a SIMULAÇÃO REAL em C (simulator/simulator, Rothermel + frente
-de onda) sobre um cenário real, deixando o usuário variar vento, umidade do
-combustível e ponto de ignição e OBSERVAR a propagação responder — com animação
-temporal da chegada do fogo.
-
 Rodar (no servidor):
     streamlit run app/fire_dashboard.py --server.port 8501
 Acessar via navegador (port-forward): http://localhost:8501

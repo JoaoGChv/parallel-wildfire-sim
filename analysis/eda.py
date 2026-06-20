@@ -1,15 +1,4 @@
 """
-eda.py — Análise Exploratória e Validação do dataset semântico (450×450×14)
-
-Responde à pergunta da banca ("por que há cenários/camadas 'vazias, sem relevo'?")
-e valida a integridade física das 14 camadas antes de qualquer benchmark.
-
-Gera:
-  analysis/out/eda_report.md          — relatório textual com flags de anomalia
-  analysis/out/layer_stats.csv        — estatísticas por camada (todos os cenários)
-  analysis/out/montage_<SID>.png      — montagem das 14 camadas de cenários exemplo
-  analysis/out/hist_layers.png        — histogramas globais por camada
-
 Uso:
     python analysis/eda.py --semantic-dir data/semantic --out analysis/out
 """

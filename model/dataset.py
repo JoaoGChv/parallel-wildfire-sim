@@ -1,12 +1,3 @@
-"""
-dataset.py — Dataset PyTorch otimizado para LoadPredictorCNN
-
-Pré-carrega todos os 68 tensores em RAM (~826 MB) para eliminar I/O
-durante o treino. Cada amostra é uma janela atomic_size×atomic_size
-centrada num pixel, com label = TOA normalizado em [0,1].
-
-Labels normalizados: y / 86400.0  (TOA máximo = 24h de simulação)
-"""
 import csv
 import logging
 from pathlib import Path

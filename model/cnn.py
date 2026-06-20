@@ -1,12 +1,3 @@
-"""
-cnn.py — LoadPredictorCNN: predição de carga computacional por célula
-
-Arquitetura (Kwon et al. 2022, Figure 5):
-  Input:  (batch, 14, W, W)   W ∈ {9,12,15,18,21}
-  3× Conv2d(→BatchNorm→ReLU)
-  Flatten → FC(256,ReLU) → FC(1)
-  Output: escalar — tempo de chegada do fogo (s)
-"""
 import torch
 import torch.nn as nn
 

@@ -1,21 +1,3 @@
-"""
-predict_load.py — Inferência da CNN: mapa de carga computacional predito
-
-Dado um cenário semântico (.npy 450×450×14), roda a LoadPredictorCNN em TODAS as
-janelas atomic_size×atomic_size (uma por célula) e produz o mapa de carga predito
-(TOA por célula, em segundos). Esse mapa alimenta o particionamento k-d tree
-ANTES de rodar a simulação — exatamente o fluxo do paper (Kwon et al. 2022):
-prever a carga offline a partir do dado semântico, particionar balanceado, simular.
-
-A entrada é normalizada por canal com as estatísticas salvas no treino
-(cnn_size{N}_norm.pt) — sem isso a predição fica errada.
-
-Uso:
-    python model/predict_load.py --npy data/semantic/train/S002.npy \
-        --model results/models/cnn_size21_best.pt \
-        --norm  results/models/cnn_size21_norm.pt \
-        --atomic-size 21 --out /tmp/loadmap_S002.csv
-"""
 import argparse
 import sys
 from pathlib import Path
